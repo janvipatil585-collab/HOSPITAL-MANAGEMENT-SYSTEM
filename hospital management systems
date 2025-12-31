@@ -1,0 +1,249 @@
+patients = []
+appointments = []
+feedbacks = []
+
+# Doctors list
+doctors = {
+    "fever": ["Dr. Sharma", "Dr. Patil"],
+    "heart": ["Dr. Mehta"],
+    "diabetes": ["Dr. Deshmukh"],
+    "skin": ["Dr. Kulkarni"],
+    "eye": ["Dr. Joshi"]
+}
+
+# ---------------- ADD PATIENT ----------------
+def add_patient():
+    pid = int(input("Enter Patient ID: "))
+
+    for p in patients:
+        if p["Patient ID"] == pid:
+            print("Patient ID already exists!")
+            return
+
+    name = input("Enter Patient Name: ")
+    age = int(input("Enter Age: "))
+    gender = input("Enter Gender: ")
+    disease = input("Enter Disease: ").strip().lower()
+
+    # -------- CRITICAL PATIENT LOGIC (UNIQUE FEATURE) --------
+    critical = False
+    if age >= 60 or disease in ["heart", "diabetes"]:
+        critical = True
+
+    patients.append({
+        "Patient ID": pid,
+        "Name": name,
+        "Age": age,
+        "Gender": gender,
+        "Disease": disease,
+        "Critical": critical
+    })
+
+    print("Patient added successfully!")
+    if critical:
+        print("⚠️ Patient marked as CRITICAL")
+
+# ---------------- DISPLAY PATIENTS ----------------
+def display_patients():
+    if not patients:
+        print("No patients available.")
+        return
+
+    print("\n====== Patient List ======")
+    for p in sorted(patients, key=lambda x: x["Patient ID"]):
+        status = "CRITICAL" if p["Critical"] else "Normal"
+        print(f"ID:{p['Patient ID']} | Name:{p['Name']} | Disease:{p['Disease'].capitalize()} | Status:{status}")
+
+# ---------------- REMOVE PATIENT ----------------
+def remove_patients():
+    if not patients:
+        print("No patients to remove.")
+        return
+
+    n = int(input("How many patients do you want to remove? "))
+    for _ in range(n):
+        pid = int(input("Enter Patient ID to remove: "))
+        for p in patients:
+            if p["Patient ID"] == pid:
+                patients.remove(p)
+                print("Patient removed.")
+                break
+        else:
+            print("Patient ID not found!")
+
+# ---------------- BOOK APPOINTMENT ----------------
+def book_appointment():
+    pid = int(input("Enter Patient ID for appointment: "))
+
+    patient = None
+    for p in patients:
+        if p["Patient ID"] == pid:
+            patient = p
+            break
+
+    if patient is None:
+        print("Patient ID not found!")
+        return
+
+    # -------- CRITICAL ALERT --------
+    if patient["Critical"]:
+        print("\n⚠️ ALERT: This patient is CRITICAL!")
+        print("Extra medical attention required.\n")
+
+    disease = patient["Disease"]
+
+    if disease not in doctors:
+        print("No doctor available for this disease.")
+        return
+
+    print("Available Doctors:")
+    for i, d in enumerate(doctors[disease], start=1):
+        print(f"{i}. {d}")
+
+    choice = int(input("Select Doctor number: "))
+    if choice < 1 or choice > len(doctors[disease]):
+        print("Invalid choice!")
+        return
+
+    appointments.append({
+        "Patient ID": pid,
+        "Patient Name": patient["Name"],
+        "Disease": disease,
+        "Doctor": doctors[disease][choice - 1]
+    })
+
+    print("Appointment booked successfully!")
+
+# ---------------- DISPLAY APPOINTMENTS ----------------
+def display_appointments():
+    if not appointments:
+        print("No appointments booked.")
+        return
+
+    print("\n====== Appointment List ======")
+    for a in appointments:
+        print(f"\nPatient ID   : {a['Patient ID']}")
+        print(f"Patient Name : {a['Patient Name']}")
+        print(f"Disease      : {a['Disease'].capitalize()}")
+        print(f"Doctor       : {a['Doctor']}")
+
+# ---------------- HOSPITAL BILL ----------------
+def show_hospital_bill():
+    pid = int(input("Enter Patient ID to generate bill: "))
+
+    appointment = None
+    for a in appointments:
+        if a["Patient ID"] == pid:
+            appointment = a
+            break
+
+    if appointment is None:
+        print("No appointment found for this Patient ID!")
+        return
+
+    # -------- CRITICAL ALERT IN BILLING --------
+    for p in patients:
+        if p["Patient ID"] == pid and p["Critical"]:
+            print("\n⚠️ CRITICAL PATIENT ALERT!")
+            print("Emergency care charges may apply.\n")
+
+    consultation_fee = 500
+    medicine = float(input("Enter Medicine Charges: "))
+    room = float(input("Enter Room Charges: "))
+
+    total = consultation_fee + medicine + room
+
+    print("\n========== HOSPITAL BILL ==========")
+    print(f"Patient ID      : {appointment['Patient ID']}")
+    print(f"Patient Name    : {appointment['Patient Name']}")
+    print(f"Disease         : {appointment['Disease'].capitalize()}")
+    print(f"Doctor          : {appointment['Doctor']}")
+    print("----------------------------------")
+    print(f"Consultation Fee: ₹{consultation_fee}")
+    print(f"Medicine Charges: ₹{medicine}")
+    print(f"Room Charges    : ₹{room}")
+    print("----------------------------------")
+    print(f"Total Bill      : ₹{total}")
+    print("==================================")
+
+# ---------------- FEEDBACK & RATING ----------------
+def add_feedback():
+    pid = int(input("Enter Patient ID for feedback: "))
+
+    appointment = None
+    for a in appointments:
+        if a["Patient ID"] == pid:
+            appointment = a
+            break
+
+    if appointment is None:
+        print("Feedback allowed only after appointment!")
+        return
+
+    rating = int(input("Give Rating (1 to 5): "))
+    if rating < 1 or rating > 5:
+        print("Invalid rating!")
+        return
+
+    comment = input("Enter Feedback: ")
+
+    feedbacks.append({
+        "Patient ID": pid,
+        "Patient Name": appointment["Patient Name"],
+        "Doctor": appointment["Doctor"],
+        "Rating": rating,
+        "Feedback": comment
+    })
+
+    print("Feedback submitted successfully!")
+
+def display_feedback():
+    if not feedbacks:
+        print("No feedback available.")
+        return
+
+    print("\n====== Patient Feedback ======")
+    for f in feedbacks:
+        print("\n---------------------------")
+        print(f"Patient ID   : {f['Patient ID']}")
+        print(f"Patient Name : {f['Patient Name']}")
+        print(f"Doctor       : {f['Doctor']}")
+        print(f"Rating       : {f['Rating']} ⭐")
+        print(f"Feedback     : {f['Feedback']}")
+
+# ---------------- MAIN MENU ----------------
+while True:
+    print("\n--- Hospital Management System ---")
+    print("1. Add Patient")
+    print("2. Display Patients")
+    print("3. Remove Patients")
+    print("4. Book Appointment")
+    print("5. Display Appointments")
+    print("6. Show Hospital Bill")
+    print("7. Add Patient Feedback")
+    print("8. Display Feedback")
+    print("9. Exit")
+
+    ch = input("Enter choice: ")
+
+    if ch == '1':
+        add_patient()
+    elif ch == '2':
+        display_patients()
+    elif ch == '3':
+        remove_patients()
+    elif ch == '4':
+        book_appointment()
+    elif ch == '5':
+        display_appointments()
+    elif ch == '6':
+        show_hospital_bill()
+    elif ch == '7':
+        add_feedback()
+    elif ch == '8':
+        display_feedback()
+    elif ch == '9':
+        print("Thank you! Exiting system.")
+        break
+    else:
+        print("Invalid choice! Try again.")
